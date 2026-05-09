@@ -1,20 +1,16 @@
 {
     "name": "Smart Home IoT Project",
-    "build": {
-        "dockerfile": "Dockerfile"
-    },
+    "image": "mcr.microsoft.com/devcontainers/python:3.11",
     "customizations": {
         "vscode": {
-            "extensions": [
-                "ms-python.python"
-            ]
+            "extensions": ["ms-python.python"]
         }
     },
-    "postCreateCommand": "pip install -r requirements.txt",
+    "postCreateCommand": "pip install flask",
     "forwardPorts": [5000],
     "portsAttributes": {
         "5000": {
-            "label": "Flask Application",
+            "label": "Flask App",
             "onAutoForward": "notify"
         }
     }
