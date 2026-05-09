@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Аналитика - Умный дом</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { background: white; border-radius: 15px; padding: 25px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .header h1 { color: #333; margin-bottom: 10px; }
+        .nav { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
+        .nav-btn { background: #667eea; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; transition: all 0.3s; }
+        .nav-btn:hover { background: #764ba2; transform: translateY(-2px); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 30px; }
+        .stat-card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: transform 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-title { font-size: 14px; text-transform: uppercase; color: #888; margin-bottom: 10px; }
+        .stat-value { font-size: 36px; font-weight: bold; color: #333; }
+        .stat-unit { font-size: 16px; color: #888; }
+        .stat-range { margin-top: 10px; font-size: 12px; color: #999; }
+        .section { background: white; border-radius: 15px; padding: 25px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .section-title { font-size: 20px; margin-bottom: 20px; color: #333; border-left: 4px solid #667eea; padding-left: 15px; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        .data-table th { background: #f8f9fa; color: #333; font-weight: 600; }
+        .data-table tr:hover { background: #f8f9fa; }
+        .alert { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .alert-success { background: #d4edda; border-left-color: #28a745; }
+        .recommendations { list-style: none; }
+        .recommendations li { padding: 10px 0; border-bottom: 1px solid #eee; }
+        @media (max-width: 768px) { .stats-grid { grid-template-columns: 1fr; } .data-table { font-size: 12px; } .data-table th, .data-table td { padding: 8px; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Аналитика системы "Умный дом"</h1>
+        <p>Статистика показателей датчиков и эффективность работы актуаторов</p>
+        <div class="nav">
+            <a href="/" class="nav-btn">На главную</a>
+            <a href="/admin" class="nav-btn">Админ-панель</a>
+            <a href="/refresh_sensors" class="nav-btn">Обновить данные</a>
+        </div>
+    </div>
+    <div class="alert alert-success">Система работает стабильно. Все датчики в норме.</div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-title">Средняя температура</div>
+            <div class="stat-value">{{ stats.temperature.avg if stats.temperature else '—' }} <span class="stat-unit">°C</span></div>
+            <div class="stat-range">Диапазон: {{ stats.temperature.min if stats.temperature else '—' }} – {{ stats.temperature.max if stats.temperature else '—' }} °C</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Средняя влажность</div>
+            <div class="stat-value">{{ stats.humidity.avg if stats.humidity else '—' }} <span class="stat-unit">%</span></div>
+            <div class="stat-range">Диапазон: {{ stats.humidity.min if stats.humidity else '—' }} – {{ stats.humidity.max if stats.humidity else '—' }} %</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Средняя освещённость</div>
+            <div class="stat-value">{{ stats.light.avg if stats.light else '—' }} <span class="stat-unit">лк</span></div>
+            <div class="stat-range">Диапазон: {{ stats.light.min if stats.light else '—' }} – {{ stats.light.max if stats.light else '—' }} лк</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Общее энергопотребление</div>
+            <div class="stat-value">{{ total_power }} <span class="stat-unit">Вт</span></div>
+            <div class="stat-range">Активных актуаторов: {{ (actuator_actions|selectattr('state', 'equalto', 'on')|list|length) if actuator_actions else 0 }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Прогноз температуры (след. час)</div>
+            <div class="stat-value">{{ temp_prediction if temp_prediction is not none else 'нет данных' }} <span class="stat-unit">°C</span></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">Динамика показателей (последние 20 записей)</h2>
+        <table class="data-table">
+            <thead><tr><th>Время</th><th>Температура (°C)</th><th>Влажность (%)</th><th>Освещённость (лк)</th></tr></thead>
+            <tbody>
+                {% for row in recent_data %}
+                <tr><td>{{ row.timestamp }}</td><td>{{ row.temp }}</td><td>{{ row.hum if row.hum is not none else '—' }}</td><td>{{ row.light if row.light is not none else '—' }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">Активность актуаторов</h2>
+        <table class="data-table">
+            <thead><tr><th>Время</th><th>Актуатор</th><th>Действие</th><th>Состояние</th></tr></thead>
+            <tbody>
+                {% for log in actuator_actions %}
+                <tr><td>{{ log.timestamp }}</td><td>{{ log.actuator_id }}</td><td>{{ log.action }}</td><td>{{ log.state }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">Рекомендации по оптимизации</h2>
+        <ul class="recommendations">
+            {% for rec in recommendations %}
+                <li>{{ rec }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+</body>
+</html>
