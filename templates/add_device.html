@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Добавить устройство</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        form { max-width: 500px; margin: 20px 0; }
+        div { margin-bottom: 15px; }
+        label { display: inline-block; width: 120px; }
+        input, select { padding: 5px; width: 250px; }
+        button { background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+    </style>
+    <script>
+        function toggleFields() {
+            var type = document.getElementById('type').value;
+            document.getElementById('sensor_fields').style.display = type === 'sensor' ? 'block' : 'none';
+            document.getElementById('actuator_fields').style.display = type === 'actuator' ? 'block' : 'none';
+        }
+    </script>
+</head>
+<body onload="toggleFields()">
+    <h1>Добавить новое устройство</h1>
+    <a href="{{ url_for('admin') }}">Назад к админ-панели</a>
+    <form method="POST">
+        <div><label>Тип устройства:</label><select name="type" id="type" onchange="toggleFields()"><option value="sensor">Сенсор</option><option value="actuator">Актуатор</option></select></div>
+        <div><label>ID:</label><input type="text" name="id" required></div>
+        <div><label>Название:</label><input type="text" name="name" required></div>
+        <div><label>Расположение:</label><input type="text" name="location" required></div>
+        <div id="sensor_fields">
+            <div><label>Тип сенсора:</label><select name="sensor_type"><option value="temperature">Температура</option><option value="humidity">Влажность</option><option value="light">Свет</option></select></div>
+            <div><label>Единица измерения:</label><input type="text" name="unit" value="°C"></div>
+        </div>
+        <div id="actuator_fields">
+            <div><label>Тип действия:</label><select name="action_type"><option value="light">Свет</option><option value="heating">Обогрев</option><option value="ac">Кондиционер</option></select></div>
+            <div><label>Мощность (Вт):</label><input type="number" name="power" value="100"></div>
+        </div>
+        <div><button type="submit">Добавить устройство</button></div>
+    </form>
+</body>
+</html>
