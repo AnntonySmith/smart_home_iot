@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Умный дом - Пользователь</title>
+    <style>
+        body { font-family: Arial; margin: 20px; background: #f0f0f0; }
+        .container { display: flex; flex-wrap: wrap; }
+        .card { background: white; border-radius: 8px; padding: 15px; margin: 10px; width: 300px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .sensor { border-left: 5px solid #2196F3; }
+        .actuator { border-left: 5px solid #FF9800; }
+        .value { font-size: 24px; font-weight: bold; }
+        button { background: #4CAF50; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; }
+        button.off { background: #f44336; }
+        a { text-decoration: none; margin-left: 15px; }
+        .nav-links { margin: 20px 0; }
+        .nav-links a { background: #2196F3; color: white; padding: 10px 15px; border-radius: 4px; display: inline-block; margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Умный дом - Пользовательская панель</h1>
+    <p>Статус системы: {{ system_status }} | Последнее обновление: {{ last_update }}</p>
+    <div class="nav-links">
+        <a href="{{ url_for('refresh_sensors') }}">Обновить показания</a>
+        <a href="{{ url_for('admin') }}">Панель администратора</a>
+        <a href="{{ url_for('analytics') }}">Аналитика</a>
+    </div>
+    <h2>Датчики</h2>
+    <div class="container">
+        {% for sensor in sensors %}
+        <div class="card sensor">
+            <h3>{{ sensor.name }}</h3>
+            <p>Тип: {{ sensor.sensorType }}</p>
+            <p>Локация: {{ sensor.location }}</p>
+            <div class="value">{{ sensor.currentValue }} {{ sensor.unit }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    <h2>Актуаторы</h2>
+    <div class="container">
+        {% for actuator in actuators %}
+        <div class="card actuator">
+            <h3>{{ actuator.name }}</h3>
+            <p>Тип: {{ actuator.actionType }}</p>
+            <p>Локация: {{ actuator.location }}</p>
+            <p>Мощность: {{ actuator.powerConsumption }} Вт</p>
+            <form action="{{ url_for('toggle_actuator', actuator_id=actuator.id) }}" method="post">
+                <button type="submit" class="{{ 'off' if actuator.currentState == 'off' else '' }}">
+                    {{ 'Выключить' if actuator.currentState == 'on' else 'Включить' }}
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
